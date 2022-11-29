@@ -1,20 +1,24 @@
-// Require express and body-parser
 const express = require("express")
 const bodyParser = require("body-parser")
 const axios = require("axios")
 const path = require("path");
-const dotenv = require('dotenv').config( {
-    path: path.join(__dirname, '.env')
+const dotenv = require("dotenv").config( {
+    path: path.join(__dirname, ".env")
   } );
+
 // Initialize express and define a port
 const app = express()
 const PORT = process.env.PORT || 3000;
+
+// Slack webhook api environment variable
 const slackWebhook = process.env.SLACKWEBHOOK || dotenv.SLACKWEBHOOK
 
 // Tell express to use body-parser's JSON parsing
 app.use(bodyParser.json())
 
 app.post("/hook", (req, res) => {
+
+  // Filter out only approved reviews
   if(req.body && req.body.review && req.body.review.state === 'approved'){
 
     const reviewer = req.body.review.user && req.body.review.user.login
@@ -22,6 +26,9 @@ app.post("/hook", (req, res) => {
     const title = req.body.pull_request && req.body.pull_request.title
     const link = req.body.pull_request && req.body.pull_request.html_url
     const repository = req.body.repository && req.body.repository.name
+
+    // Post request to the slack webhook api with a slack block as the data
+    // https://app.slack.com/block-kit-builder - great resource for building slack webhook messages
 
     axios.post(slackWebhook, {
         "blocks": [
